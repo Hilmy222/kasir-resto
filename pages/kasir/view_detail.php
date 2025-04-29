@@ -57,6 +57,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 $pesanan_info = $detail_pesanan[0];
 ?>
 
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -271,7 +272,7 @@ $pesanan_info = $detail_pesanan[0];
                 <div class="form-group">
                     <label for="bayar">Jumlah Bayar:</label>
                     <div class="flex">
-                    <input type="number" id="bayar" name="bayar" required min="<?php echo $total_pesanan; ?>">
+                    <input type="number" id="bayar" name="bayar" required   >
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Proses Pembayaran</button>

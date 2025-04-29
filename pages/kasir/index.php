@@ -74,13 +74,13 @@ if (!isset($_SESSION['user_level']) || $_SESSION['user_level'] !== 'kasir') {
     exit();
 }
 
-// Fetch pending orders (unpaid) grouped by table and order code
+// Fetch pending orders (unpaid) grouped by order code
 $query = "SELECT 
             MIN(p.id_pesanan) as id_pesanan,
             p.kode_pesanan,
             pl.nama_pelanggan,
             m.no_meja,
-            GROUP_CONCAT(CONCAT(mn.nama_menu, ' (', p.jumlah, ' x ', FORMAT(mn.harga, 0), ')') SEPARATOR ', ') as detail_pesanan,
+            GROUP_CONCAT(DISTINCT CONCAT(mn.nama_menu, ' (', p.jumlah, ' x ', FORMAT(mn.harga, 0), ')') SEPARATOR ', ') as detail_pesanan,
             SUM(p.jumlah * mn.harga) as total_harga,
             m.id as meja_id,
             MIN(p.created_at) as created_at
@@ -88,8 +88,7 @@ $query = "SELECT
           JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan
           JOIN meja m ON p.meja_id = m.id
           JOIN menu mn ON p.id_menu = mn.id_menu
-          LEFT JOIN transaksi t ON p.id_pesanan = t.id_pesanan
-          WHERE t.id_transaksi IS NULL
+          WHERE NOT EXISTS (SELECT 1 FROM transaksi t WHERE t.id_pesanan = p.id_pesanan)
           GROUP BY p.kode_pesanan, pl.nama_pelanggan, m.no_meja, m.id
           ORDER BY MIN(p.created_at) DESC";
 
@@ -170,6 +169,15 @@ $result = mysqli_query($conn, $query);
                                 <i class="ri-message-3-line"></i>
                             </span>
                             <span class="menu-text"> Riwayat Pesanan </span>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="laporan.php" class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ri-message-3-line"></i>
+                            </span>
+                            <span class="menu-text"> Generate Laporan </span>
                         </a>
                     </li>
 
@@ -260,35 +268,35 @@ $result = mysqli_query($conn, $query);
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Kode Pesanan</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Pelanggan</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Meja</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Detail Pesanan</th>
+                                                <!-- <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Detail Pesanan</th> -->
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Total</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Action</th>
                                             </tr>
                                         </thead>
-                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                    <?php 
-                                    $no = 1;
-                                    while ($row = mysqli_fetch_assoc($result)): 
-                                    ?>
+                                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        <?php 
+                                        $no = 1;
+                                        while ($row = mysqli_fetch_assoc($result)): 
+                                        ?>
                                             <tr class="bg-gray-50 dark:bg-gray-900">
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo $no++; ?></td>
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['kode_pesanan']); ?></td>
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['nama_pelanggan']); ?></td>
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><span>Meja </span><?php echo $row['no_meja']; ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php 
+                                                <!-- <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php 
                                                 $menu_items = explode(', ', $row['detail_pesanan']);
                                                 foreach ($menu_items as $item) {
                                                     echo "<span class='menu-item'>$item</span>";
                                                 }
-                                                ?></td>
+                                                ?></td> -->
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><span>Rp<?php echo number_format($row['total_harga'], 0, ',', '.'); ?></td>
                                                 <td class="px-4 py-4">
                                                     <div class="flex items-center justify-start space-x-3">
-                                                    <a href="view_detail.php?kode_pesanan=<?php echo urlencode($row['kode_pesanan']); ?>" class="btn btn-success">View Detail</a>
+                                                    <a href="view.php?kode_pesanan=<?php echo urlencode($row['kode_pesanan']); ?>" class="btn btn-success">View Detail</a>
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <?php endwhile; ?>
+                                        <?php endwhile; ?>
                                     </tbody>
                                     </table>
                                 </div>
@@ -334,6 +342,8 @@ $result = mysqli_query($conn, $query);
 
         </div> 
     </div>
+
+    
      <!-- Plugin Js -->
      <script src="../../assets/libs/simplebar/simplebar.min.js"></script>
     <script src="../../assets/libs/lucide/umd/lucide.min.js"></script>
@@ -495,4 +505,4 @@ $result = mysqli_query($conn, $query);
     </script>
 
         </body>
-    </html> 
+    </html>

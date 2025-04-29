@@ -108,6 +108,15 @@ $result = mysqli_query($conn, $query);
                         </a>
                     </li>
 
+                    <li class="menu-item">
+                        <a href="laporan.php" class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ri-message-3-line"></i>
+                            </span>
+                            <span class="menu-text"> Generate Laporan </span>
+                        </a>
+                    </li>
+
                 </ul>
 
             </div>
@@ -180,7 +189,7 @@ $result = mysqli_query($conn, $query);
             <?php endif; ?>
             <div class="card">
                     <div class="p-6">
-                        <h3 class="card-title mb-4">Data Meja</h3>
+                        <h3 class="card-title mb-4">Riwayat Transaksi</h3>
 
                         <div class="w-full overflow-x-auto">
                             <div class="min-w-full inline-block align-middle">
@@ -189,14 +198,15 @@ $result = mysqli_query($conn, $query);
                                         <thead>
                                             <tr>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">No</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Waktu Transaksi</th>
+                                                <!-- <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">ID Transaksi</th> -->
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Kode Pesanan</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Pelanggan</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Meja</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Detail Pesanan</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Total</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Bayar</th>
                                                 <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Kembalian</th>
+                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Tanggal</th>
+                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -206,17 +216,91 @@ $result = mysqli_query($conn, $query);
                                         ?>
                                             <tr class="bg-gray-50 dark:bg-gray-900">
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo $no++; ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
+                                                <!-- <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo $row['id_transaksi']; ?></td> -->
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['kode_pesanan']); ?></td>
                                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['nama_pelanggan']); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><span>Meja</span><?php echo $row['no_meja']; ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['detail_pesanan']); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><span>Rp</span><?php echo number_format($row['total'], 0, ',', '.'); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><span>Rp</span><?php echo number_format($row['bayar'], 0, ',', '.'); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><span>Rp</span><?php echo number_format($row['kembalian'], 0, ',', '.'); ?></td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Meja <?php echo $row['no_meja']; ?></td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Rp<?php echo number_format($row['total'], 0, ',', '.'); ?></td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Rp<?php echo number_format($row['bayar'], 0, ',', '.'); ?></td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Rp<?php echo number_format($row['kembalian'], 0, ',', '.'); ?></td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
+                                                <td class="px-4 py-4">
+                                                    <button onclick="printReceipt(<?php echo htmlspecialchars(json_encode($row)); ?>)" class="btn bg-primary text-white">Cetak Struk</button>
+                                                </td>
                                             </tr>
-                                            <?php endwhile; ?>
+                                        <?php endwhile; ?>
                                         </tbody>
+                                    </table>
+                                    <script>
+                                        function printReceipt(receiptData) {
+                                            if (!receiptData || !receiptData.id_transaksi) {
+                                                alert('Data transaksi tidak valid atau belum tersedia');
+                                                return;
+                                            }
+
+                                            try {
+                                                const printWindow = window.open('', '', 'width=1920,height=1080');
+                                                if (!printWindow) {
+                                                    alert('Popup diblokir! Mohon izinkan popup untuk mencetak struk.');
+                                                    return;
+                                                }
+
+                                                printWindow.document.write(`
+                                                    <html>
+                                                    <head>
+                                                        <title>Struk Pembayaran</title>
+                                                        <style>
+                                                            body { font-family: monospace; font-size: 12px; margin: 0; padding: 10px; }
+                                                            .header { text-align: center; margin-bottom: 20px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+                                                            .detail { margin: 10px 0; }
+                                                            .menu-item { margin-left: 10px; }
+                                                            .total { margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px; }
+                                                            .footer { text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px; }
+                                                            .align-right { text-align: right; }
+                                                            .bold { font-weight: bold; }
+                                                        </style>
+                                                    </head>
+                                                    <body>
+                                                        <div class="header">
+                                                            <h2 style="margin: 0;">RESTORAN IMY</h2>
+                                                            <p style="margin: 5px 0;">Jl. Contoh No. 123, Kota</p>
+                                                            <p style="margin: 5px 0;">Telp: (021) 1234567</p>
+                                                            <p style="margin: 5px 0;">NPWP: 12.345.678.9-012.345</p>
+                                                        </div>
+                                                        <div class="detail">
+                                                            <p style="margin: 3px 0;">No. Transaksi: ${receiptData.id_transaksi}</p>
+                                                            <p style="margin: 3px 0;">Kode Pesanan: ${receiptData.kode_pesanan || '-'}</p>
+                                                            <p style="margin: 3px 0;">Pelanggan: ${receiptData.nama_pelanggan || '-'}</p>
+                                                            <p style="margin: 3px 0;">Meja: ${receiptData.no_meja || '-'}</p>
+                                                            <p style="margin: 3px 0;">Tanggal: ${new Date(receiptData.created_at).toLocaleString('id-ID')}</p>
+                                                        </div>
+                                                        <div class="menu-items">
+                                                            <p class="bold">Detail Pesanan:</p>
+                                                            ${receiptData.detail_pesanan.split(', ').map(item => `<p class="menu-item">${item}</p>`).join('')}
+                                                        </div>
+                                                        <div class="total">
+                                                            <p class="bold">Total: Rp${Number(receiptData.total).toLocaleString('id-ID')}</p>
+                                                            <p>Bayar: Rp${Number(receiptData.bayar).toLocaleString('id-ID')}</p>
+                                                            <p>Kembalian: Rp${Number(receiptData.kembalian).toLocaleString('id-ID')}</p>
+                                                        </div>
+                                                        <div class="footer">
+                                                            <p>Terima kasih atas kunjungan Anda</p>
+                                                            <p>Silakan datang kembali</p>
+                                                        </div>
+                                                    </body>
+                                                    </html>
+                                                `);
+
+                                                printWindow.document.close();
+                                                printWindow.focus();
+                                                printWindow.print();
+                                                printWindow.close();
+                                            } catch (error) {
+                                                console.error('Error printing receipt:', error);
+                                                alert('Terjadi kesalahan saat mencetak struk');
+                                            }
+                                        }
+                                    </script>
                                     </table>
                                     
                                    
@@ -234,4 +318,4 @@ $result = mysqli_query($conn, $query);
         </div> 
     </div>
     </body>
-</html> 
+</html>

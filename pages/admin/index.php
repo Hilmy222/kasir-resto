@@ -110,34 +110,6 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                         </a>
                     </li>
 
-                    <li class="menu-item">
-                        <a href="user.php" data-fc-type="collapse" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-mail-line"></i>
-                            </span>
-                            <span class="menu-text"> User </span>
-                        </a>
-                    </li>
-
-                    <li class="menu-item">
-                        <a href="javascript:void(0)" data-fc-type="collapse" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-mail-line"></i>
-                            </span>
-                            <span class="menu-text"> Pesanan </span>
-                        </a>
-                    </li>
-
-
-                    <li class="menu-item">
-                        <a href="apps-kanban.html" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-list-check-3"></i>
-                            </span>
-                            <span class="menu-text">Generate Laporan</span>
-                        </a>
-                    </li>
-
                 </ul>
 
             </div>
@@ -213,7 +185,7 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                 <!-- Page Title End -->
 
                 <div class="grid 2xl:grid-cols-5 lg:grid-cols-6 md:grid-cols-2 gap-6 mb-6">
-                    <div class="2xl:col-span-1 lg:col-span-2">
+                    <div class="2xl:col-span-1 lg:col-span-3">
                         <div class="card">
                             <div class="p-6">
                                 <div class="flex justify-between">
@@ -229,7 +201,7 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                         </div> <!-- end card-->
                     </div>
 
-                    <div class="2xl:col-span-1 lg:col-span-2">
+                    <div class="2xl:col-span-1 lg:col-span-3">
                         <div class="card">
                             <div class="p-6">
                                 <div class="flex justify-between">
@@ -243,7 +215,7 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                         </div> <!-- end card-->
                     </div>
 
-                    <div class="2xl:col-span-1 lg:col-span-2">
+                    <!-- <div class="2xl:col-span-1 lg:col-span-2">
                         <div class="card">
                             <div class="p-6">
                                 <div class="flex justify-between">
@@ -254,9 +226,9 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                                     <div id="widget-revenue" class="apex-charts" data-colors="#16a7e9,#e3e9ee"></div>
                                 </div>
 
-                            </div> <!-- end p-6-->
-                        </div> <!-- end card-->
-                    </div>
+                            </div> 
+                        </div>
+                    </div> -->
                 </div>
 
 

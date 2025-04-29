@@ -132,34 +132,6 @@ $result = mysqli_query($conn, $query);
                         </a>
                     </li>
 
-                    <li class="menu-item">
-                        <a href="user.php" data-fc-type="collapse" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-mail-line"></i>
-                            </span>
-                            <span class="menu-text"> User </span>
-                        </a>
-                    </li>
-
-                    <li class="menu-item">
-                        <a href="javascript:void(0)" data-fc-type="collapse" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-mail-line"></i>
-                            </span>
-                            <span class="menu-text"> Pesanan </span>
-                        </a>
-                    </li>
-
-
-                    <li class="menu-item">
-                        <a href="apps-kanban.html" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-list-check-3"></i>
-                            </span>
-                            <span class="menu-text">Generate Laporan</span>
-                        </a>
-                    </li>
-
                 </ul>
 
             </div>
@@ -276,6 +248,9 @@ $result = mysqli_query($conn, $query);
                                                     <?php endwhile; ?>
                                             </tbody>
                                             </table>
+                                            <div>
+                                                
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

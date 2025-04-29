@@ -2,26 +2,65 @@
 session_start();
 require_once '../../config/database.php';
 
-// Cek apakah user sudah login dan memiliki level admin
-if (!isset($_SESSION['user_level']) || $_SESSION['user_level'] !== 'admin') {
-    header('Location: ../../index.php');
-    exit();
+// Cek apakah user sudah login dan memiliki level owner
+// if (!isset($_SESSION['user_level']) || $_SESSION['user_level'] !== 'owner') {
+//     header('Location: ../../index.php');
+//     exit();
+// }
+
+// Mengambil data transaksi hari ini menggunakan stored procedure
+$query_today = "CALL GetDailyReport(CURDATE())";
+if ($result_today = mysqli_query($conn, $query_today)) {
+    $today_stats = mysqli_fetch_assoc($result_today);
+    mysqli_free_result($result_today);
+    // Bersihkan result set yang tersisa
+    while (mysqli_next_result($conn)) {
+        if ($res = mysqli_store_result($conn)) {
+            mysqli_free_result($res);
+        }
+    }
 }
 
-// Mengambil data menu untuk ditampilkan di dashboard
-$query_menu = "SELECT COUNT(*) as total_menu FROM menu";
-$result_menu = mysqli_query($conn, $query_menu);
-$total_menu = mysqli_fetch_assoc($result_menu)['total_menu'];
+// Mengambil data transaksi minggu ini
+$query_week = "SELECT 
+    COUNT(*) as total_transaksi,
+    SUM(total) as total_pendapatan
+FROM transaksi 
+WHERE YEARWEEK(created_at) = YEARWEEK(CURDATE())";
+if ($result_week = mysqli_query($conn, $query_week)) {
+    $week_stats = mysqli_fetch_assoc($result_week);
+    mysqli_free_result($result_week);
+}
 
-// Mengambil data meja
-$query_meja = "SELECT COUNT(*) as total_meja FROM meja";
-$result_meja = mysqli_query($conn, $query_meja);
-$total_meja = mysqli_fetch_assoc($result_meja)['total_meja'];
+// Mengambil data transaksi bulan ini
+$query_month = "SELECT 
+    COUNT(*) as total_transaksi,
+    SUM(total) as total_pendapatan
+FROM transaksi 
+WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())";
+if ($result_month = mysqli_query($conn, $query_month)) {
+    $month_stats = mysqli_fetch_assoc($result_month);
+    mysqli_free_result($result_month);
+}
 
-// Mengambil data user
-$query_user = "SELECT COUNT(*) as total_user FROM users";
-$result_user = mysqli_query($conn, $query_user);
-$total_user = mysqli_fetch_assoc($result_user)['total_user'];
+// Mengambil data menu terlaris menggunakan stored procedure
+$query_popular = "CALL GetPopularMenu(5)";
+if ($result_popular = mysqli_query($conn, $query_popular)) {
+    // Simpan result set untuk digunakan nanti dalam HTML
+    $popular_menu = [];
+    while ($row = mysqli_fetch_assoc($result_popular)) {
+        $popular_menu[] = $row;
+    }
+    mysqli_free_result($result_popular);
+    // Bersihkan result set yang tersisa
+    while (mysqli_next_result($conn)) {
+        if ($res = mysqli_store_result($conn)) {
+            mysqli_free_result($res);
+        }
+    }
+} else {
+    die('Error executing stored procedure: ' . mysqli_error($conn));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,26 +72,27 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
     <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc., Tailwind, TailwindCSS, Tailwind CSS 3" name="description">
     <meta content="coderthemes" name="author">
 
+    <link rel="stylesheet" href="../../public/css/output.css">
+
     <!-- App favicon -->
-    <link rel="shortcut icon" href="assets/images/favicon.ico">
+    <link rel="shortcut icon" href="../../../../assets/images/favicon.ico">
 
     <!-- plugin css -->
-    <link href="assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css">
+    <link href="../../assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css">
 
     <!-- App css -->
-    <link href="assets/css/app.min.css" rel="stylesheet" type="text/css">
-
+    <link href="../../assets/css/app.min.css" rel="stylesheet" type="text/css">
+    
     <!-- Icons css -->
-    <link href="assets/css/icons.min.css" rel="stylesheet" type="text/css">
+    <link href="../../assets/css/icons.min.css" rel="stylesheet" type="text/css">
 
     <!-- Theme Config Js -->
-    <script src="assets/js/config.js"></script>
+    <script src="../../assets/js/config.js"></script>
 </head>
 
 <body>
-
+    
     <div class="flex wrapper">
-
         <!-- Sidenav Menu -->
         <div class="app-menu">
 
@@ -60,14 +100,14 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
             <a href="index.html" class="logo-box">
                 <!-- Light Logo -->
                 <div class="logo-light">
-                    <img src="assets/images/logo.png" class="logo-lg h-[22px]" alt="Light logo">
-                    <img src="assets/images/logo-sm.png" class="logo-sm h-[22px]" alt="Small logo">
+                    <img src="../../assets/images/logo.png" class="logo-lg h-[22px]" alt="Light logo">
+                    <img src="../../assets/images/logo-sm.png" class="logo-sm h-[22px]" alt="Small logo">
                 </div>
 
                 <!-- Dark Logo -->
                 <div class="logo-dark">
-                    <img src="assets/images/logo-dark.png" class="logo-lg h-[22px]" alt="Dark logo">
-                    <img src="assets/images/logo-sm.png" class="logo-sm h-[22px]" alt="Small logo">
+                    <img src="../../assets/images/logo-dark.png" class="logo-lg h-[22px]" alt="Dark logo">
+                    <img src="../../assets/images/logo-sm.png" class="logo-sm h-[22px]" alt="Small logo">
                 </div>
             </a>
 
@@ -81,75 +121,33 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
             <div class="scrollbar" data-simplebar>
                 <ul class="menu" data-fc-type="accordion">
 
-                    <li class="menu-item">
-                        <a href="javascript:void(0)" data-fc-type="collapse" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-home-4-line"></i>
-                            </span>
-                            <span class="menu-text"> Dashboard </span>
-                            <span class="badge bg-success rounded-full">2</span>
-                        </a>
-
-                        <ul class="sub-menu hidden">
-                            <li class="menu-item">
-                                <a href="dashboard-analytics.html" class="menu-link">
-                                    <span class="menu-text">Analytics</span>
-                                </a>
-                            </li>
-                            <li class="menu-item">
-                                <a href="index.html" class="menu-link">
-                                    <span class="menu-text">Ecommerce</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-
-                    <li class="menu-item">
-                        <a href="menu.php" class="menu-link">
+                <li class="menu-item">
+                        <a href="index.php" class="menu-link">
                             <span class="menu-icon">
                                 <i class="ri-calendar-event-line"></i>
                             </span>
-                            <span class="menu-text"> Menu </span>
+                            <span class="menu-text"> Pembayaran </span>
                         </a>
                     </li>
 
                     <li class="menu-item">
-                        <a href="meja.php" class="menu-link">
+                        <a href="riwayat.php" class="menu-link">
                             <span class="menu-icon">
                                 <i class="ri-message-3-line"></i>
                             </span>
-                            <span class="menu-text"> Meja </span>
+                            <span class="menu-text"> Riwayat Pesanan </span>
                         </a>
                     </li>
 
                     <li class="menu-item">
-                        <a href="user.php" data-fc-type="collapse" class="menu-link">
+                        <a href="laporan.php" class="menu-link">
                             <span class="menu-icon">
-                                <i class="ri-mail-line"></i>
+                                <i class="ri-message-3-line"></i>
                             </span>
-                            <span class="menu-text"> User </span>
+                            <span class="menu-text"> Generate Laporan </span>
                         </a>
                     </li>
 
-                    <li class="menu-item">
-                        <a href="javascript:void(0)" data-fc-type="collapse" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-mail-line"></i>
-                            </span>
-                            <span class="menu-text"> Pesanan </span>
-                        </a>
-                    </li>
-
-
-                    <li class="menu-item">
-                        <a href="apps-kanban.html" class="menu-link">
-                            <span class="menu-icon">
-                                <i class="ri-list-check-3"></i>
-                            </span>
-                            <span class="menu-text">Generate Laporan</span>
-                        </a>
-                    </li>
 
                 </ul>
 
@@ -199,7 +197,7 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                 <!-- Profile Dropdown Button -->
                 <div class="relative">
                     <button data-fc-type="dropdown" data-fc-placement="bottom-end" type="button" class="nav-link flex items-center gap-2.5 px-3">
-                        <img src="assets/images/users/avatar-1.jpg" alt="user-image" class="rounded-full h-8">
+                        <img src="../../assets/images/users/avatar-1.jpg" alt="user-image" class="rounded-full h-8">
                         <span class="md:flex flex-col gap-0.5 text-start hidden">
                             <h5 class="text-sm">Admin</h5>
                         </span>
@@ -222,22 +220,8 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                 <!-- Page Title Start -->
                 <div class="flex justify-between items-center mb-6">
                     <h4 class="text-slate-900 dark:text-slate-200 text-lg font-medium">Dashboard</h4>
+                    <button onclick="printReport()" class="btn bg-success text-white" style="background-color: #28a745; margin-right: 10px;">Cetak Laporan</button>
 
-                    <div class="md:flex hidden items-center gap-2.5 font-semibold">
-                        <div class="flex items-center gap-2">
-                            <a href="#" class="text-sm font-medium text-slate-700 dark:text-slate-400">Attex</a>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <i class="ri-arrow-right-s-line text-base text-slate-400 rtl:rotate-180"></i>
-                            <a href="#" class="text-sm font-medium text-slate-700 dark:text-slate-400">Menu</a>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <i class="ri-arrow-right-s-line text-base text-slate-400 rtl:rotate-180"></i>
-                            <a href="#" class="text-sm font-medium text-slate-700 dark:text-slate-400" aria-current="page">Dashboard</a>
-                        </div>
-                    </div>
                 </div>
                 <!-- Page Title End -->
 
@@ -247,11 +231,9 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                             <div class="p-6">
                                 <div class="flex justify-between">
                                     <div class="grow overflow-hidden">
-                                        <h5 class="text-base/3 text-gray-400 font-normal mt-0" title="Number of Customers">Total Menu</h5>
-                                        <h3 class="text-2xl my-6"><?php echo $total_menu; ?></h3>
-                                    </div>
-                                    <div class="shrink">
-                                        <div id="widget-customers" class="apex-charts" data-colors="#47ad77,#e3e9ee"></div>
+                                        <h5 class="text-base/3 text-gray-400 font-normal mt-0" title="Number of Customers">Pendapatan Hari Ini</h5>
+                                        <h3 class="text-2xl my-6">Rp<?php echo number_format($today_stats['total_pendapatan'] ?? 0, 0, ',', '.'); ?></h3>
+                                        <h3>Total Transaksi : <?php echo $today_stats['total_transaksi'] ?? 0; ?></h3>
                                     </div>
                                 </div>
                             </div> <!-- end p-6-->
@@ -263,10 +245,10 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                             <div class="p-6">
                                 <div class="flex justify-between">
                                     <div class="grow overflow-hidden">
-                                        <h5 class="text-base/3 text-gray-400 font-normal mt-0" title="Number of Orders">Total Meja</h5>
-                                        <h3 class="text-2xl my-6"><?php echo $total_meja; ?></h3>
+                                        <h5 class="text-base/3 text-gray-400 font-normal mt-0" title="Number of Orders">Pendapatan Minggu Ini</h5>
+                                        <h3 class="text-2xl my-6">Rp<?php echo number_format($week_stats['total_pendapatan'] ?? 0, 0, ',', '.'); ?></h3>
+                                        <h3>Total Transaksi : <?php echo $week_stats['total_transaksi'] ?? 0; ?></h3>
                                     </div>
-                                    <div id="widget-orders" class="apex-charts" data-colors="#3e60d5,#e3e9ee"></div>
                                 </div>
                             </div> <!-- end p-6-->
                         </div> <!-- end card-->
@@ -277,16 +259,45 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
                             <div class="p-6">
                                 <div class="flex justify-between">
                                     <div class="grow overflow-hidden">
-                                        <h5 class="text-base/3 text-gray-400 font-normal mt-0" title="Average Revenue">Total user</h5>
-                                        <h3 class="text-2xl my-6"><?php echo $total_user; ?></h3>
+                                        <h5 class="text-base/3 text-gray-400 font-normal mt-0" title="Average Revenue">Pendapatan Bulan Ini</h5>
+                                        <h3 class="text-2xl my-6">Rp<?php echo number_format($month_stats['total_pendapatan'] ?? 0, 0, ',', '.'); ?></h3>
+                                        <h3>Total Transaksi : <?php echo $month_stats['total_transaksi'] ?? 0; ?></h3>
                                     </div>
-                                    <div id="widget-revenue" class="apex-charts" data-colors="#16a7e9,#e3e9ee"></div>
                                 </div>
 
-                            </div> <!-- end p-6-->
-                        </div> <!-- end card-->
+                            </div> 
+                        </div>
                     </div>
                 </div>
+                <div class="card">
+                    <div class="p-6">
+                        <h3 class="card-title mb-4">Menu Terlaris</h3>
+                        <div class="overflow-x-auto">
+                                <div class="min-w-full inline-block align-middle">
+                                    <div class="overflow-hidden">
+                                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Menu</th>
+                                                    <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Total Terjual</th>
+                                                    <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Total Pendapatan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                            <?php foreach ($popular_menu as $menu): ?>
+                                                <tr class="bg-gray-50 dark:bg-gray-900">
+                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($menu['nama_menu']); ?></td>
+                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo $menu['total_terjual']; ?></td>
+                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Rp<?php echo number_format($menu['total_pendapatan'], 0, ',', '.'); ?></td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
                
@@ -320,23 +331,35 @@ $total_user = mysqli_fetch_assoc($result_user)['total_user'];
     
 
     <!-- Plugin Js -->
-    <script src="assets/libs/simplebar/simplebar.min.js"></script>
-    <script src="assets/libs/lucide/umd/lucide.min.js"></script>
-    <script src="assets/libs/@frostui/tailwindcss/frostui.js"></script>
+    <script src="../../assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="../../assets/libs/lucide/umd/lucide.min.js"></script>
+    <script src="../../assets/libs/@frostui/tailwindcss/frostui.js"></script>
 
     <!-- App Js -->
-    <script src="assets/js/app.js"></script>
+    <script src="../../assets/js/app.js"></script>
 
     <!-- Apex Charts js -->
-    <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+    <script src="../../assets/libs/apexcharts/apexcharts.min.js"></script>
 
     <!-- Vector Map Js -->
-    <script src="assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
-    <script src="assets/libs/jsvectormap/maps/world-merc.js"></script>
-    <script src="assets/libs/jsvectormap/maps/world.js"></script>
+    <script src="../../assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
+    <script src="../../assets/libs/jsvectormap/maps/world-merc.js"></script>
+    <script src="../../assets/libs/jsvectormap/maps/world.js"></script>
 
     <!-- Dashboard App js -->
-    <script src="assets/js/pages/dashboard.js"></script>
+    <script src="../../assets/js/pages/dashboard.js"></script>
+    
+    <script>
+        function printReport() {
+            // Tambahkan kelas print-mode ke body saat mencetak
+            document.body.classList.add('print-mode');
+            window.print();
+            // Hapus kelas setelah selesai mencetak
+            window.onafterprint = function() {
+                document.body.classList.remove('print-mode');
+            };
+        }
+    </script>
 
 </body>
 
