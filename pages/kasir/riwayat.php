@@ -10,22 +10,22 @@ if (!isset($_SESSION['user_level']) || $_SESSION['user_level'] !== 'kasir') {
 
 // Mengambil data transaksi
 $query = "SELECT 
-            t.id_transaksi,
+            MIN(t.id_transaksi) as id_transaksi,
             p.kode_pesanan,
             pl.nama_pelanggan,
             m.no_meja,
             GROUP_CONCAT(CONCAT(mn.nama_menu, ' (', p.jumlah, ' x ', mn.harga, ')') SEPARATOR ', ') as detail_pesanan,
-            t.total,
-            t.bayar,
-            t.kembalian,
-            t.created_at
+            SUM(t.total) as total,
+            SUM(t.bayar) as bayar,
+            SUM(t.kembalian) as kembalian,
+            MIN(t.created_at) as created_at
           FROM transaksi t
           JOIN pesanan p ON t.id_pesanan = p.id_pesanan
           JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan
           JOIN meja m ON p.meja_id = m.id
           JOIN menu mn ON p.id_menu = mn.id_menu
-          GROUP BY t.id_transaksi
-          ORDER BY t.created_at DESC";
+          GROUP BY p.kode_pesanan, pl.nama_pelanggan, m.no_meja
+          ORDER BY MIN(t.created_at) DESC";
 
 $result = mysqli_query($conn, $query);
 ?>

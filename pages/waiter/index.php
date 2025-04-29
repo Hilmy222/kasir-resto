@@ -153,6 +153,15 @@ if (isset($_POST['tambah_pesanan'])) {
                             <span class="menu-text"> Daftar Pesanan </span>
                         </a>
                     </li>
+                    
+                    <li class="menu-item">
+                        <a href="laporan.php" class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ri-message-3-line"></i>
+                            </span>
+                            <span class="menu-text"> Generate Laporan </span>
+                        </a>
+                    </li>
 
                 </ul>
 

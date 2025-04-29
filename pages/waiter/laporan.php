@@ -3,10 +3,10 @@ session_start();
 require_once '../../config/database.php';
 
 // Cek apakah user sudah login dan memiliki level owner
-if (!isset($_SESSION['user_level']) || $_SESSION['user_level'] !== 'owner') {
-    header('Location: ../../index.php');
-    exit();
-}
+// if (!isset($_SESSION['user_level']) || $_SESSION['user_level'] !== 'owner') {
+//     header('Location: ../../index.php');
+//     exit();
+// }
 
 // Mengambil data transaksi hari ini menggunakan stored procedure
 $query_today = "CALL GetDailyReport(CURDATE())";
@@ -121,10 +121,28 @@ if ($result_popular = mysqli_query($conn, $query_popular)) {
             <div class="scrollbar" data-simplebar>
                 <ul class="menu" data-fc-type="accordion">
 
-                    <li class="menu-item">
-                        <a href="index.php" data-fc-type="collapse" class="menu-link">
+                <li class="menu-item">
+                        <a href="index.php" class="menu-link">
                             <span class="menu-icon">
-                                <i class="ri-home-4-line"></i>
+                                <i class="ri-calendar-event-line"></i>
+                            </span>
+                            <span class="menu-text"> Pembayaran </span>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="riwayat.php" class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ri-message-3-line"></i>
+                            </span>
+                            <span class="menu-text"> Riwayat Pesanan </span>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="laporan.php" class="menu-link">
+                            <span class="menu-icon">
+                                <i class="ri-message-3-line"></i>
                             </span>
                             <span class="menu-text"> Generate Laporan </span>
                         </a>
@@ -279,66 +297,10 @@ if ($result_popular = mysqli_query($conn, $query_popular)) {
                                 </div>
                             </div>
                         </div>
-                </div>
-                <br>
-                <br>
-                <!-- Daftar Transaksi disini my -->
-                <div class="card mt-6">
-                    <div class="p-6">
-                        <h3 class="card-title mb-4">Daftar Transaksi</h3>
-                        <div class="overflow-x-auto">
-                            <div class="min-w-full inline-block align-middle">
-                                <div class="overflow-hidden">
-                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">No</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">ID Transaksi</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Kode Pesanan</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Pelanggan</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Meja</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Total</th>
-                                                <th scope="col" class="px-4 py-4 text-start text-sm font-medium text-gray-500">Tanggal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                        <?php 
-                                        // Query untuk mengambil semua transaksi dikelompokkan berdasarkan kode_pesanan
-                                        $query_transaksi = "SELECT 
-                                            MIN(t.id_transaksi) as id_transaksi,
-                                            p.kode_pesanan,
-                                            pl.nama_pelanggan,
-                                            m.no_meja,
-                                            SUM(t.total) as total,
-                                            MIN(t.created_at) as created_at
-                                        FROM transaksi t
-                                        JOIN pesanan p ON t.id_pesanan = p.id_pesanan
-                                        JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan
-                                        JOIN meja m ON p.meja_id = m.id
-                                        GROUP BY p.kode_pesanan, pl.nama_pelanggan, m.no_meja
-                                        ORDER BY MIN(t.created_at) DESC";
-                                        
-                                        $result_transaksi = mysqli_query($conn, $query_transaksi);
-                                        $no = 1;
-                                        while ($row = mysqli_fetch_assoc($result_transaksi)): 
-                                        ?>
-                                            <tr class="bg-gray-50 dark:bg-gray-900">
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo $no++; ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo $row['id_transaksi']; ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['kode_pesanan']); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo htmlspecialchars($row['nama_pelanggan']); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Meja <?php echo $row['no_meja']; ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">Rp<?php echo number_format($row['total'], 0, ',', '.'); ?></td>
-                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
-                                            </tr>
-                                        <?php endwhile; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                </div>
+
+
+               
 
             </main>
 
